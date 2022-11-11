@@ -1,5 +1,7 @@
 #This script normalizes JSON-formatted game log files (specified in the
 #command line) and writes them to punish_data.db.
+#In this directory, input the following into the command line:
+#julia json2db.jl filepath
 using JSON
 using SQLite
 using DataFrames
@@ -10,7 +12,7 @@ CONFIG = Dict(
 )
 #Settings for this script.
 
-STATE_SPACE = Set(JSON.parsefile("../statespace.json",use_mmap=false))
+STATE_SPACE = Set(JSON.parsefile("../envs/statespace.json",use_mmap=false))
 #Load the state space in order to ensure all states are valid before writing
 #games to database.
 
