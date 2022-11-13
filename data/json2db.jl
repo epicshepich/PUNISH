@@ -4,6 +4,7 @@
 #julia json2db.jl filepath
 using JSON
 using SQLite
+using SQLStrings
 using DataFrames
 
 CONFIG = Dict(
@@ -61,7 +62,7 @@ function new_player!(username)
     is_bot = (username ∈ CONFIG[:bot_names]) ? 1 : 0
     #For the time being, we will identify bots by protected usernames.
     players[username] = (player_id=new_id, is_bot=is_bot)
-    DBInterface.execute(db,"INSERT INTO players VALUES ($(new_id),'$(username)',$(is_bot));")
+    DBInterface.execute(db,sql`INSERT INTO players VALUES ($(new_id),'$(username)',$(is_bot));`)
     #Save the player to the username dict and insert record into database.
 end
 
@@ -72,8 +73,8 @@ function new_paramset!(paramset)
     global max_paramset_id += 1
     #Set the ID of the paramset to the next integer after the largest existing ID.
     bot_parameters[paramset] = new_id
-    DBInterface.execute(db,"""INSERT INTO bot_parameters(paramset_id,temperature)
-    VALUES ($(new_id),$(paramset.temperature));""")
+    DBInterface.execute(db,sql`INSERT INTO bot_parameters(paramset_id,temperature)
+    VALUES ($(new_id),$(paramset.temperature));`)
     #Save the record to the dict and write to the database.
 end
 
@@ -123,10 +124,10 @@ function new_game!(game_id, winner, loser)
 
     DBInterface.execute(
         db,
-        """INSERT INTO
+        sql`INSERT INTO
         games(game_id,winner_id,loser_id,winner_paramset_id,loser_paramset_id) VALUES
         ($(game_id),$(winner_id),$(loser_id),$(winner_paramset_id),$(loser_paramset_id))
-        ;""")
+        ;`)
 
 end
 
@@ -198,9 +199,9 @@ for (game_id,game) in new_games
     for breath in game.breaths
         DBInterface.execute(
             db,
-            """INSERT INTO breaths(game_id,is_winner,state,action) VALUES
+            sql`INSERT INTO breaths(game_id,is_winner,state,action) VALUES
             ($(game_id),$(breath.is_winner),$(breath.state),$(breath.action))
-            ;""")
+            ;`)
     end
 
 end
