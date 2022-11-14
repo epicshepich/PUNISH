@@ -4,18 +4,17 @@
 #julia json2db.jl filepath
 using JSON
 using SQLite
-using SQLStrings
 using DataFrames
+include("state_action_validation.jl")
+#Include the state space and code to generate possible actions
+#to help filter out bugged games.
 
 CONFIG = Dict(
-    :bot_names => ["PARLESS"],
+    :bot_names => ["naive","general_parless","champion_parless",
+    "general_pawnn","champion_pawnn"],
     :verbose => true
 )
 #Settings for this script.
-
-STATE_SPACE = Set(JSON.parsefile("../envs/statespace.json",use_mmap=false))
-#Load the state space in order to ensure all states are valid before writing
-#games to database.
 
 db = SQLite.DB("punish_data.db")
 #Initialize connection to database.
@@ -62,7 +61,9 @@ function new_player!(username)
     is_bot = (username ∈ CONFIG[:bot_names]) ? 1 : 0
     #For the time being, we will identify bots by protected usernames.
     players[username] = (player_id=new_id, is_bot=is_bot)
-    DBInterface.execute(db,sql`INSERT INTO players VALUES ($(new_id),'$(username)',$(is_bot));`)
+    DBInterface.execute(
+        db,"INSERT INTO players VALUES (?,?,?);",[new_id,username,is_bot]
+        )
     #Save the player to the username dict and insert record into database.
 end
 
@@ -73,8 +74,8 @@ function new_paramset!(paramset)
     global max_paramset_id += 1
     #Set the ID of the paramset to the next integer after the largest existing ID.
     bot_parameters[paramset] = new_id
-    DBInterface.execute(db,sql`INSERT INTO bot_parameters(paramset_id,temperature)
-    VALUES ($(new_id),$(paramset.temperature));`)
+    DBInterface.execute(db,"""INSERT INTO bot_parameters(paramset_id,temperature)
+    VALUES (?,?);""", [new_id,paramset.temperature])
     #Save the record to the dict and write to the database.
 end
 
@@ -92,8 +93,8 @@ function new_game!(game_id, winner, loser)
     #Add unfamiliar usernames to the database.
     winner_id = players[winner].player_id
     loser_id = players[loser].player_id
-    winner_params = (players[winner].is_bot==1) ? (temperature=0) : nothing
-    loser_params = (players[loser].is_bot==1) ? (temperature=0) : nothing
+    winner_params = (players[winner].is_bot==1) ? (temperature=0,) : nothing
+    loser_params = (players[loser].is_bot==1) ? (temperature=0,) : nothing
     #For the time being, all bots use a temperature parameter of 0
     #(i.e. strict greedy choice).
     if isnothing(winner_params)
@@ -124,14 +125,15 @@ function new_game!(game_id, winner, loser)
 
     DBInterface.execute(
         db,
-        sql`INSERT INTO
-        games(game_id,winner_id,loser_id,winner_paramset_id,loser_paramset_id) VALUES
-        ($(game_id),$(winner_id),$(loser_id),$(winner_paramset_id),$(loser_paramset_id))
-        ;`)
+        """INSERT INTO
+        games(game_id,winner_id,loser_id,winner_paramset_id,loser_paramset_id)
+        VALUES (?,?,?,?,?);""",
+        [game_id,winner_id,loser_id,winner_paramset_id,loser_paramset_id]
+    )
 
 end
 
-bugged_game_ids = []
+bugged_games = Dict{Int64,NamedTuple}()
 #Track which games encountered bugs.
 new_games = Dict()
 
@@ -142,7 +144,7 @@ for filepath in ARGS
     for breath in data
         game_id = breath["GameID"]
 
-        if (game_id ∈ game_ids)||(game_id ∈ bugged_game_ids)
+        if (game_id ∈ game_ids)||(game_id ∈ keys(bugged_games))
             continue
             #Skip games whose ids are already present in the database, as well
             #as games that have been identified to have experienced bugs.
@@ -151,8 +153,13 @@ for filepath in ARGS
         state = parse(Int64,breath["State"])
         #Encoded states are represented as string in the JSON logs.
 
-        if state ∉ STATE_SPACE
-            push!(bugged_game_ids,game_id)
+        action = breath["Choice"]*10+breath["Feint"]
+        #Actions are encoded as two-digit integers in which the first indicates
+        #the card selected and the second indicates whether or not a feint was
+        #used.
+        has_bug = [(state ∉ STATE_SPACE),(action ∉ possible_actions(state))]
+        if any(has_bug)
+            bugged_games[game_id] = (state=has_bug[1],action=has_bug[2])
             if game_id ∈ keys(new_games)
                 delete!(new_games,game_id)
             end
@@ -160,12 +167,6 @@ for filepath in ARGS
             #Sometimes, a glitch will result in impossible states. Games with
             #impossible states should be thrown out.
         end
-
-        action = breath["Choice"]*10+breath["Feint"]
-        #Actions are encoded as two-digit integers in which the first indicates
-        #the card selected and the second indicates whether or not a feint was
-        #used.
-
 
         winner = (breath["Result"]==-1) ? breath["UserName"] : breath["EnemyName"]
         loser = (breath["Result"]==-2) ? breath["UserName"] : breath["EnemyName"]
@@ -189,8 +190,12 @@ end
 
 
 CONFIG[:verbose] && println("Finished parsing $(length(new_games)) games.")
-CONFIG[:verbose] && println("Encountered $(length(bugged_game_ids)) games with invalid states:")
-CONFIG[:verbose] && println(bugged_game_ids)
+bugged_state_ids = [gameid for (gameid,bug) in bugged_games if bug.state]
+bugged_action_ids = [gameid for (gameid,bug) in bugged_games if bug.action]
+CONFIG[:verbose] && println("Encountered $(length(bugged_state_ids)) games with bugged states:")
+CONFIG[:verbose] && println(bugged_state_ids)
+CONFIG[:verbose] && println("Encountered $(length(bugged_action_ids)) games with bugged actions:")
+CONFIG[:verbose] && println(bugged_action_ids)
 CONFIG[:verbose] && println("Writing games to database...")
 
 for (game_id,game) in new_games
@@ -199,12 +204,14 @@ for (game_id,game) in new_games
     for breath in game.breaths
         DBInterface.execute(
             db,
-            sql`INSERT INTO breaths(game_id,is_winner,state,action) VALUES
-            ($(game_id),$(breath.is_winner),$(breath.state),$(breath.action))
-            ;`)
+            """INSERT INTO breaths(game_id,is_winner,state,action) VALUES
+            (?,?,?,?)
+            ;""",
+            [game_id,breath.is_winner,breath.state,breath.action]
+        )
     end
 
 end
 
-
+DBInterface.close!(db)
 CONFIG[:verbose] && println("Finished.")
