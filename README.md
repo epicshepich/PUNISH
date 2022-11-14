@@ -1,7 +1,7 @@
 # Playing Punish with Reinforcement Learning
 ### Jim Shepich III
 ### Updated: 14 November 2022
-### Time Required: 56 hours 42 minutes
+### Time Required: 57 hours 32 minutes
 
 This repository contains the data, models, results, and analysis of my efforts to use reinforcement learning to train artificial agents to play PUNISH
 
