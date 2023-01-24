@@ -1,0 +1,26 @@
+model-name: ai_slayer
+data:
+    epoch-start: -.inf
+    epoch-end: +.inf
+    include-player-vs-cpu: true
+    include-cpu-actions: false
+    winner-actions-only: false
+    custom-sql: ~
+parless:
+    enabled: true
+    prior-pseudocounts: 3
+pawnn:
+    enabled: true
+    network-structure:
+        - Dense(18 => 36, relu)
+        - Dropout(0.5)
+        - Dense(36 => 24, relu)
+        - Dense(24 => 16, relu)
+        - Dense(16 => 11)
+        - softmax
+    optimizer: Flux.Adam(0.001)
+    n-epochs: 100
+    loss-metric: Flux.mse
+    onehot: false
+value-iteration:
+    n-episodes: 250

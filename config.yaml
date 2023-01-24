@@ -1,0 +1,22 @@
+output-folder:
+q-function:
+    format: JSON
+statespace:
+     filepath: statespace.json
+     generate: false
+transition-map:
+    save: false
+training-log:
+    save: true
+parless:
+pawnn:
+    random-seed: 42
+    cross-validate: true
+    n-cv-folds: 5
+    logging:
+        loss: true
+value-iteration:
+    logging:
+        mse: false
+        greedy-choice-changes: true
+        episode-time: true

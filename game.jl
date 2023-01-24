@@ -421,3 +421,49 @@ end
 function transitionmap(state::Int,action::Int; kwargs...)
      return transitionmap(decode_state(state),decode_action(action);kwargs...)
 end
+
+function transitionmap(state::Int;kwargs...)
+    """This dispatch creates the transition map for every possible action
+    that can be taken at the given state."""
+    return Dict(
+        action => transitionmap(state,action;kwargs...)
+        for action in possible_actions(state)
+    )
+end
+
+function state_int2vector(state)
+    return reverse(digits(state).*1.0)
+    #Reverse the digits so the first component is breath number; multiply by
+    #1.0 so vectors are float-valued.
+end
+
+function state_vector2int(state_vector)
+    return sum([convert(Int64, component*10^(i-1) ) for (i,component) in enumerate(reverse(state_vector))])
+    #Multiply each digit by the power of 10 corresponding to its place in the number; convert back to integers
+    #to avoid roundoff error.
+end
+
+ACTION_COMPONENTS = [10,11,20,21,30,31,40,41,50,51,90]
+function strategy_dict2vector(strategy_dict::Dict{Int64,Float64})
+    return [get(strategy_dict,action,0) for action in ACTION_COMPONENTS]
+    #Unavailable actions get a probability of 0.
+end
+
+
+function strategy_vector2dict(strategy_vector)
+    """This function converts a raw strategy vector back into a dict
+    by simply mapping each action to the value of the corresponding component."""
+    return Dict(action=>component for (action,component) in zip(ACTION_COMPONENTS,strategy_vector))
+end
+
+function strategy_vector2dict(strategy_vector,state::Int64)
+    """This dispatch uses the corresponding state to filter out unavailable actions
+    and normalize the probabilities."""
+    raw_strategy = strategy_vector2dict(strategy_vector)
+    #Get the raw dictionary from the vector.
+    actions = possible_actions(state)
+    normalizer = sum(raw_strategy[action] for action in actions)
+    #Sum together the raw probabilities of each possible action to get the denominator.
+    return Dict(action => raw_strategy[action]/normalizer for action in actions)
+    #Map each possible action to its normalized probability.
+end
