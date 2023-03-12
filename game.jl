@@ -467,3 +467,55 @@ function strategy_vector2dict(strategy_vector,state::Int64)
     return Dict(action => raw_strategy[action]/normalizer for action in actions)
     #Map each possible action to its normalized probability.
 end
+
+STARTING_STATES = Set{Int64}()
+hands = Set{NamedTuple}()
+
+for draws in (combinations(repeat([:guard,:rush,:dodge,:strike,:punish],3),5))
+    hand = (; [(card,sum(draws.==card)) for card in [:guard,:rush,:dodge,:strike,:punish]]...)
+    #Loop over all possible starting hands.
+    if hand in hands
+        continue
+        #The `combinations` function does not account for identical elements, so
+        #skip any combinations that have already been encountered.
+    else
+        push!(hands,hand)
+        #Track the combinations that have been encountered.
+    end
+
+    discards = []
+    for discard_draws in combinations(
+            vcat([repeat([card],3-count) for (card, count) in pairs(hand)]...),
+            3
+        )
+        #Loop over all possible 3-card discard piles taken from the cards that
+        #remain after the player's hand has been drawn.
+        discard = (; [(card,sum(discard_draws.==card)) for card in [:guard,:rush,:dodge,:strike,:punish]]...)
+        if discard in discards
+            continue
+        else
+            push!(discards,discard)
+        end
+        #Likewise, skip discard combinations that have already been encountered.
+
+        starting_state = DuelingState(
+            1,
+            hand,
+            (hp=3, exhausted=false, feinted=false),
+            (hp=3, hand_size=5, exhausted=false, feinted=false),
+            discard
+        )
+        push!(STARTING_STATES,encode_state(starting_state))
+
+    end
+end
+
+BREATH1_STATES = union(
+    STARTING_STATES,
+    STARTING_STATES .- 0_00000_100_0000_00000,
+    #Player starts with 2HP
+    STARTING_STATES .- 0_00000_000_1000_00000,
+    #Enemy starts with 2HP
+    STARTING_STATES .- 0_00000_100_1000_00000
+    #Both start with 2HP
+)

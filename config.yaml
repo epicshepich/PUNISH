@@ -1,4 +1,5 @@
 output-folder:
+model-parameters: model.yaml
 q-function:
     format: JSON
 statespace:
@@ -9,8 +10,14 @@ transition-map:
 training-log:
     save: true
 parless:
+    enabled: true
+    database: SQLite.DB("archived/data/punish_data.db")
 pawnn:
+    enabled: true
     random-seed: 42
+    initial-weights-file: ~
+    weights-output-file: ~
+    use-gpu: true
     cross-validate: true
     n-cv-folds: 5
     logging:
