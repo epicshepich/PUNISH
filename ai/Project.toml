@@ -1,0 +1,19 @@
+name = "punish-ai-notebook"
+authors = ["Jim Shepich III <epicshepich@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+IJulia = "1.23"
+StatsBase = "1.0.0"
+JSON = "0.21.2"
+YAML = "0.5.14"
+BenchmarkTools = "0.7.0"
+ProgressMeter = "1.5.0"
+SQLite = "1.5.0"
+DataFrames = "1.4.2"
+ThreadsX = "0.1.11"
+Flux = "0.12.5"
+CUDA = "3.5.0"
+PlotlyJS = "0.18.10"
+SHA = "0.7.0"
+Combinatorics = "1.0.2"

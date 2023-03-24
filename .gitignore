@@ -1,5 +1,7 @@
 app
 app/*
+_.*
+test.*
 envs/naive_transitions.json
 envs/general_parless_transitions.json
 envs/champion_parless_transitions.json

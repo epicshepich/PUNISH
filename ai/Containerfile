@@ -1,0 +1,11 @@
+FROM julia:1.8.5-buster
+
+WORKDIR /
+
+# Files do not need to be copied over because this directory is included as a mount.
+
+# Install the packages for the project
+RUN julia -e 'using Pkg; Pkg.instantiate()'
+
+# Set the command to start Pluto
+CMD ["julia", "--project=/ai", "--startup-file=yes", "-e", "using IJulia; notebook(host=\"0.0.0.0\", port=parse(Int, ENV[\"JUPYTER_PORT\"]))"]

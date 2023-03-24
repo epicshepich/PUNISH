@@ -5,10 +5,13 @@ services:
     restart: always
     command: --init-file /data/application/setup.sql
     environment:
-      MYSQL_DATABASE: punish
-      MYSQL_USER: sqlslayer
-      MYSQL_PASSWORD: punish4lyfe
-      MYSQL_ROOT_PASSWORD: thewoods
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: "punish"
+      MYSQL_USER: "sqlslayer"
+      MYSQL_PASSWORD: "punish4lyfe"
+      MYSQL_ROOT_PASSWORD: "thewoods"
+    ports:
+      - "3306:3306"
     volumes:
       - ./data/setup.sql:/data/application/setup.sql
       - ./data/db:/var/lib/mysql
@@ -20,6 +23,14 @@ services:
       - "8080:8080"
     depends_on:
       - db
+    volumes:
+      - ./common:/common
+    environment:
+      MYSQL_HOST: "http://db"
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: "punish"
+      MYSQL_USER: "sqlslayer"
+      MYSQL_PASSWORD: "punish4lyfe"
 
   dashboard:
     build:
@@ -29,17 +40,22 @@ services:
     depends_on:
       - api
 
-  pluto-notebook:
-    build: .
-    ports:
-      - "8888:8888"
+  ai-notebook:
+    build:
+      context: ./ai
     volumes:
-      - ./notebooks:/home/jovyan/work
+      - ./ai:/
+      - ./common:/common
     environment:
-      - JUPYTER_ENABLE_LAB=yes
-      - JUPYTER_TOKEN=my_secret_token
-      - JULIA_NUM_THREADS=4
-      - PLUTO_PORT=8000
-    command: julia -e 'using Pluto; Pluto.run(port=8000)'
-    depends_on:
-      - api
+      MYSQL_HOST: "http://db"
+      MYSQL_PORT: 3306
+      JUPYTER_TOKEN: "thewoods"
+      #JULIA_NUM_THREADS: 4
+      JUPYTER_PORT: 8000
+      MYSQL_DATABASE: "punish"
+      MYSQL_USER: "sqlslayer"
+      MYSQL_PASSWORD: "punish4lyfe"
+    ports:
+      - "8000:8000"
+    # depends_on:
+    #  - api
