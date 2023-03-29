@@ -32,30 +32,30 @@ services:
       MYSQL_USER: "sqlslayer"
       MYSQL_PASSWORD: "punish4lyfe"
 
-  dashboard:
-    build:
-      context: ./dashboard
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api
+# #  dashboard:
+#     build:
+#       context: ./dashboard
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - api
 
-  ai-notebook:
-    build:
-      context: ./ai
-    volumes:
-      - ./ai:/
-      - ./common:/common
-    environment:
-      MYSQL_HOST: "http://db"
-      MYSQL_PORT: 3306
-      JUPYTER_TOKEN: "thewoods"
-      #JULIA_NUM_THREADS: 4
-      JUPYTER_PORT: 8000
-      MYSQL_DATABASE: "punish"
-      MYSQL_USER: "sqlslayer"
-      MYSQL_PASSWORD: "punish4lyfe"
-    ports:
-      - "8000:8000"
-    # depends_on:
-    #  - api
+#   ai-notebook:
+#     build:
+#       context: ./ai
+#     volumes:
+#       - ./ai:/
+#       - ./common:/common
+#     environment:
+#       MYSQL_HOST: "http://db"
+#       MYSQL_PORT: 3306
+#       JUPYTER_TOKEN: "thewoods"
+#       #JULIA_NUM_THREADS: 4
+#       JUPYTER_PORT: 8000
+#       MYSQL_DATABASE: "punish"
+#       MYSQL_USER: "sqlslayer"
+#       MYSQL_PASSWORD: "punish4lyfe"
+#     ports:
+#       - "8000:8000"
+#     # depends_on:
+#     #  - api

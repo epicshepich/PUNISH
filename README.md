@@ -24,7 +24,7 @@ Initial Investigation:
     - Total: 73 hours 21 minutes
 Training Overhaul: 8 hours 5 minutes
 Dashboard: 
-Database Overhaul: 1 hour 43 minutes
+Database Overhaul: 3 hours 21 minutes
 Container Structure: 2 hours 56 minutes
 API: 1 hours 50 minutes
 
