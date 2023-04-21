@@ -1,5 +1,6 @@
 app
 app/*
+data/db/*
 _.*
 test.*
 envs/naive_transitions.json

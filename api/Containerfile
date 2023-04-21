@@ -1,0 +1,23 @@
+# Use the official Julia base image
+FROM julia:1.8-alpine
+
+# Set the working directory
+WORKDIR /api
+
+# Copy the common folder
+COPY ../common /common
+
+# Copy your Project.toml and Manifest.toml files to manage dependencies
+COPY Project.toml Manifest.toml ./
+
+# Install the dependencies from your project files
+RUN julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+
+# Copy the rest of your application's source code
+COPY . .
+
+# Expose the API port
+EXPOSE 3000
+
+# Start your API with the entrypoint script or directly run the Julia file
+CMD ["julia", "--project=.", "index.jl"]

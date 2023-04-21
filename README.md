@@ -15,19 +15,6 @@ To play against artificial agents developed in this project:
 
 Feel free to send us your data (the `saves.json` file in the root directory of your game folder) to include in our analyses!
 
-## Time Log
-
-Initial Investigation:
-    - Code: 57 hours 32 minutes
-    - Report: 8 hours 54 minutes
-    - Slides: 6 hours 55 minutes
-    - Total: 73 hours 21 minutes
-Training Overhaul: 8 hours 5 minutes
-Dashboard: 
-Database Overhaul: 3 hours 21 minutes
-Container Structure: 2 hours 56 minutes
-API: 1 hours 50 minutes
-
 ## To Do
 
 ### Training

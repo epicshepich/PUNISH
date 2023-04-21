@@ -1,9 +1,13 @@
 version: "3.9"
+
+volumes:
+  mysql_data:
+
 services:
-  db:
+  database:
     image: mysql:8.0.28
     restart: always
-    command: --init-file /data/application/setup.sql
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_PORT: 3306
       MYSQL_DATABASE: "punish"
@@ -13,24 +17,24 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./data/setup.sql:/data/application/setup.sql
-      - ./data/db:/var/lib/mysql
+      - ./data/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+      - mysql_data:/var/lib/mysql
   
-  api:
-    build:
-      context: ./api
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    volumes:
-      - ./common:/common
-    environment:
-      MYSQL_HOST: "http://db"
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: "punish"
-      MYSQL_USER: "sqlslayer"
-      MYSQL_PASSWORD: "punish4lyfe"
+  # api:
+  #   build:
+  #     context: ./api
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - db
+  #   volumes:
+  #     - ./common:/common
+  #   environment:
+  #     MYSQL_HOST: "http://db"
+  #     MYSQL_PORT: 3306
+  #     MYSQL_DATABASE: "punish"
+  #     MYSQL_USER: "sqlslayer"
+  #     MYSQL_PASSWORD: "punish4lyfe"
 
 # #  dashboard:
 #     build:
