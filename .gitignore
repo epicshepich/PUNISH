@@ -3,6 +3,7 @@ app/*
 data/db/*
 _.*
 test.*
+**/*.env
 envs/naive_transitions.json
 envs/general_parless_transitions.json
 envs/champion_parless_transitions.json

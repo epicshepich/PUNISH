@@ -2,14 +2,23 @@ using HTTP
 using JSON3
 using DBInterface
 using MySQL
+using DotEnv
 #using DataStreams
 
 include("../common/game.jl")
 
-const punish_host = "127.0.0.1"#ENV["MYSQL_HOST"]
-const punish_port = 3306#parse(Int, ENV["MYSQL_PORT"])
-const punish_user = "root"#ENV["MYSQL_USER"]
-const punish_password = "thewoods"#ENV["MYSQL_PASSWORD"]
+if !("MYSQL_USER" in keys(ENV))
+    # If running locally, load environment variables from .env file
+    # (ENV variables pre-set when running from podman-compose).
+    DotEnv.config("../.env")
+    ENV["MYSQL_HOST"] = "127.0.0.1"
+end
+
+const punish_host = ENV["MYSQL_HOST"]
+const punish_port = parse(Int, ENV["MYSQL_PORT"])
+const punish_user = "root" # ENV["MYSQL_USER"]
+const punish_password = replace(ENV["MYSQL_ROOT_PASSWORD"], "\\" =>"")
+# Remove escape characters.
 
 
 const ROUTER = HTTP.Router()
