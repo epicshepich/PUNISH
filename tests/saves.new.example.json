@@ -1,9 +1,17 @@
 [{
     "play_timestamp":1668392590,
-    "winner":"naive",
-    "loser":"maestro",
-    "winner_states":[110121300350001101,200121300340021101],
-    "loser_states":[122010300350001101,212010300340021101],
-    "winner_actions":[10,50],
-    "loser_actions":[10,20]
+    "winner":{
+        "username":"naive",
+        "states":[110121300350001101,200121300340021101],
+        "actions":[10,50],
+        "bot_parameters":{
+            "temperature": 0
+        }
+    },
+    "loser":{
+        "username":"maestro",
+        "states":[122010300350001101,212010300340021101],
+        "actions":[10,20],
+        "bot_parameters":{}
+    }
 }]
